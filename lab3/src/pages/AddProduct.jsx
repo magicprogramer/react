@@ -11,7 +11,7 @@ export default function AddProduct({ categories, handleChange, handleSubmit, han
         </div>
         <div className="flex flex-col gap-2 mb-4">
           <label htmlFor="price" className="label">Price</label>
-          <input type="text" name="price" className="input" onChange={handleChange}/>
+          <input type="number" name="price" className="input" onChange={handleChange}/>
         </div>
 
         <div className="flex flex-col gap-2 mb-4">

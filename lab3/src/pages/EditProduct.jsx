@@ -39,7 +39,7 @@ export default function EditProduct({ categories, handleEditProduct}) {
         </div>
         <div className="flex flex-col gap-2 mb-4">
           <label className="label">Price</label>
-          <input className="input" name="price" value={form.price} onChange={handleChange} />
+          <input type = "number" className="input" name="price" value={form.price} onChange={handleChange} />
         </div>
         <div className="flex flex-col gap-2 mb-4">
           <label className="label">Category</label>
