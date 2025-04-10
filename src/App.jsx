@@ -6,7 +6,10 @@ import { useEffect, useState } from 'react';
 import Error from './pages/Error';
 import Menu from './pages/Menu';
 import axios from 'axios';
-
+import Admin from './pages/Admin';
+import AddProduct from './pages/AddProduct';
+import { useNavigate } from 'react-router-dom';
+import EditProduct from './pages/EditProduct';
 function App() {
   const [waiting, setWaiting] = useState(false);
   const [selectedCat, selectCat] = useState("0");
@@ -14,6 +17,43 @@ function App() {
   const [categories, setCategories]  = useState([]);
   const [activePage, selectPage] = useState(1);
   const [searched, setSearch] = useState("");
+  const [form, setForm] = useState({
+    name : "",
+    category : 1,
+    price : ""
+  }
+)
+const navigator = useNavigate();
+  const handleChange = (e)=>{
+    const newForm = {...form, [e.target.name] : e.target.value}
+    console.log(newForm)
+    setForm(newForm)
+    console.log("params", e.target.value, e.target.name);
+  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post("http://localhost:3000/menu/", {
+        ...form,
+        inCart: false,
+        count: 0
+      });
+      handleAddProduct(response.data);
+      navigator("/admin");
+    } catch (err) {
+      console.error("Failed to submit product:", err);
+    }
+  };
+  const handleUpdateProduct =  (id, data) => {
+    const newItems = items.map((item)=>{
+      if (item.id == id)item = data;
+      return item;
+    })
+  };
+  
+  const handleAddProduct = (product)=>{
+    setItems([...items, product])
+  }
   useEffect(() => {
     const getData = async () => {
         setWaiting(true);
@@ -37,7 +77,7 @@ function App() {
   }, []);
 
 const pageSize = 3;
-const handleFilter = (cat)=>{ selectCat(cat);selectPage(1);}
+const handleFilter = (cat)=>{filtered = items; selectCat(cat);selectPage(1);}
 const handlePage = (page)=>selectPage(page);
 const handleAddCart = (id)=>{
   const newItems = items.map(
@@ -53,7 +93,6 @@ const handleAddCart = (id)=>{
 const handleSearch = (form)=>{
   form.preventDefault();
   const word = form.target.input.value;
-  handleFilter("0");
   setSearch(word);
   console.log(word);
 }
@@ -99,12 +138,32 @@ const handleSearch = (form)=>{
       );
     setItems(newItems);
   };
-  
+  const handleEditProduct = (product) => {
+    axios.put(`http://localhost:3000/menu/${product.id}`, product);
+    const newItems = items.map((item) =>
+        item.id === product.id ? product : item
+    );
+    setItems(newItems);
+};
+  const handleDelProduct=(id)=>{
+    const newItems = items.filter((item)=>item.id != id);
+    console.log("newest items", newItems);
+    console.log("to deleted", id);
+    setItems(newItems);
+  }
   console.log(filtered);
   return (
     <>
       <Navbar noOfItems={items.reduce((sum, item) => sum + item.count, 0)} />
       <Routes>
+        <Route path ="/admin" element={<Admin items = {items} handlDelProduct={handleDelProduct} categories={categories}
+         handleChange={handleChange}
+         handleUpdateProduct={handleUpdateProduct}
+         />}/>
+        <Route path="product/add" element={<AddProduct categories={categories}
+        handleChange={handleChange} handleSubmit={handleSubmit}
+        handleAddProduct={handleAddProduct}
+        />}/>
         <Route path ="/"
         element={<Menu items={filtered} waiting = {waiting} cats={categories} 
         selectedCat = {selectedCat}
@@ -130,6 +189,11 @@ const handleSearch = (form)=>{
         />
         <Route path="/about" element={<About />} />
         <Route path="*" element={<Error/>}/>
+        <Route
+        path="/product/update/:id"
+        element={<EditProduct categories={categories} handleEditProduct={handleEditProduct} form = {form}
+        setForm={setForm}
+        />}></Route>
       </Routes>
     </>
   );
